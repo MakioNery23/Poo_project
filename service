@@ -1,0 +1,25 @@
+@Service
+public class TriagemService {
+  @Autowired private PacienteRepository pr;
+  @Autowired private MedicoRepository mr;
+
+  public Paciente triagem(Paciente p) { return pr.save(p); }
+  public Medico cadastrarMedico(Medico m) { return mr.save(m); }
+  public void atualizarPlantao(Long id, boolean status) {
+    Medico m = mr.findById(id).orElseThrow(() -> new EntityNotFoundException());
+    m.setEmPlantao(status);
+    mr.save(m);
+  }
+  public Optional<Paciente> buscarPaciente(Long id) { return pr.findById(id); }
+
+  public Paciente proximoAtendimento() {
+    boolean medDisponivel = mr.findAll().stream().anyMatch(Medico::isEmPlantao);
+    if (!medDisponivel) throw new RuntimeException("Sem médicos em plantão");
+    return pr.findAll().stream()
+      .sorted(Comparator
+        .comparing(Paciente::getPrioridade).reversed()
+        .thenComparing(Paciente::getGravidade).reversed())
+      .findFirst()
+      .orElseThrow(() -> new RuntimeException("Nenhum paciente na fila"));
+  }
+}
