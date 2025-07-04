@@ -1,0 +1,38 @@
+@RestController
+@RequestMapping("/api")
+public class TriagemController {
+  @Autowired private TriagemService ts;
+
+  @GetMapping("/health")
+  public Map<String,String> health(){
+    return Map.of("status","UP","message","Servidor OK");
+  }
+
+  @PostMapping("/triagem")
+  public ResponseEntity<Paciente> triagem(@RequestBody Paciente p){
+    return ResponseEntity.ok(ts.triagem(p));
+  }
+
+  @PostMapping("/medicos")
+  public ResponseEntity<Medico> cadastrar(@RequestBody Medico m){
+    return ResponseEntity.ok(ts.cadastrarMedico(m));
+  }
+
+  @PutMapping("/medicos/{id}/plantao")
+  public ResponseEntity<Void> plantao(@PathVariable Long id, @RequestBody Map<String,Boolean> body){
+    ts.atualizarPlantao(id, body.get("emPlantao"));
+    return ResponseEntity.noContent().build();
+  }
+
+  @GetMapping("/pacientes/{id}")
+  public ResponseEntity<Paciente> getPaciente(@PathVariable Long id){
+    return ts.buscarPaciente(id)
+      .map(ResponseEntity::ok)
+      .orElse(ResponseEntity.notFound().build());
+  }
+
+  @GetMapping("/atendimento/proximo")
+  public ResponseEntity<Paciente> proximo(){
+    return ResponseEntity.ok(ts.proximoAtendimento());
+  }
+}
